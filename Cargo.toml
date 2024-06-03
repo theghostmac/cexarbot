@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 clap = "4.5.4"
+binance_spot_connector_rust = "1.1.0"
