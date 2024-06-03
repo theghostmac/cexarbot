@@ -17,7 +17,10 @@ pub struct Choice {
     pub text: String,
 }
 
-pub async fn get_openai_prediction(prompt: String, api_key: String) -> Result<String, reqwest::Error> {
+pub async fn get_openai_prediction(
+    prompt: String,
+    api_key: String,
+) -> Result<String, reqwest::Error> {
     let client = Client::new();
     let request_body = OpenAIRequest {
         prompt: prompt.to_string(),
