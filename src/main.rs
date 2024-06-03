@@ -1,5 +1,6 @@
 mod cexar_ai;
 mod config;
+mod binance_client;
 
 use cexar_ai::ai_client::get_openai_prediction;
 use clap::{Arg, Command};
