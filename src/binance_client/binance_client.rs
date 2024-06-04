@@ -17,6 +17,7 @@ impl BinanceClient {
         BinanceClient { market, account }
     }
 
+
     pub fn get_account_information(&self) -> Result<AccountInformation, Error> {
         let account = self.account.get_account().unwrap();
         Ok(account)

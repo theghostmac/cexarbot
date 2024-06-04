@@ -57,10 +57,7 @@ fn cli() -> Command {
         )
 }
 
-async fn execute_command(
-    matches: clap::ArgMatches,
-    config: Config,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn execute_command(matches: clap::ArgMatches, config: Config) -> Result<(), Box<dyn std::error::Error>> {
     let openai_api_key = config.openai_api_key;
     let binance_client = BinanceClient::new(
         Some(config.binance_api_key.clone()),
@@ -90,6 +87,7 @@ async fn execute_command(
         }
         Some(("account", _sub_matches)) => {
             let account_info = binance_client.get_account_information()?;
+            println!("{:?}", account_info);
             let response = get_account_information_response(account_info, openai_api_key).await?;
             println!("{}", response);
         }
@@ -98,6 +96,7 @@ async fn execute_command(
 
     Ok(())
 }
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -123,4 +122,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = cli().get_matches();
 
     execute_command(matches, config).await
+
 }

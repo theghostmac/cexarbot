@@ -33,9 +33,12 @@ impl fmt::Display for OpenAIError {
 
 impl std::error::Error for OpenAIError {}
 
-pub async fn get_openai_prediction(prompt: String, api_key: String) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn get_openai_prediction(
+    prompt: String,
+    api_key: String,
+) -> Result<String, Box<dyn std::error::Error>> {
     let client = Client::new();
-    let request_body = OpenAIRequest {
+    let _request_body = OpenAIRequest {
         prompt: prompt.to_string(),
         max_tokens: 100,
     };
@@ -85,7 +88,10 @@ pub async fn get_openai_prediction(prompt: String, api_key: String) -> Result<St
     }
 }
 
-pub async fn get_account_information_response(account_info: AccountInformation, api_key: String) -> Result<String, Box<dyn std::error::Error>> {
+pub async fn get_account_information_response(
+    account_info: AccountInformation,
+    api_key: String,
+) -> Result<String, Box<dyn std::error::Error>> {
     let balances = account_info
         .balances
         .iter()
