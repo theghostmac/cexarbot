@@ -79,3 +79,25 @@ impl BinanceClient {
         self.account.order_status(symbol, order_id)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::secrets::*;
+
+    fn get_client() -> BinanceClient {
+        let config = Config::load().unwrap();
+        let binance_api_key = config.binance_api_key;
+        let binance_secret_key = config.binance_secret_key;
+
+        BinanceClient::new(Some(binance_api_key), Some(binance_secret_key))
+    }
+
+    #[test]
+    fn test_get_account_information() {
+        let client = get_client();
+        let account_info = client.get_account_information().unwrap();
+        println!("{:?}", account_info);
+        assert!(account_info.balances.len() > 0);
+    }
+}

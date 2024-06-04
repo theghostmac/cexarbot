@@ -3,10 +3,9 @@ mod config;
 mod binance_client;
 
 use clap::{Arg, Command};
-use tokio::runtime::Runtime;
 use config::secrets::Config;
 use crate::binance_client::binance_client::BinanceClient;
-use crate::cexar_ai::ai_client::{get_openai_prediction, get_account_information_response};
+use crate::cexar_ai::ai_client::{get_account_information_response, get_openai_prediction};
 
 fn cli() -> Command {
     Command::new("cexarbot")
@@ -97,7 +96,8 @@ async fn execute_command(matches: clap::ArgMatches, config: Config) -> Result<()
     Ok(())
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::load().unwrap();
 
     println!(
@@ -119,6 +119,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let matches = cli().get_matches();
 
-    let rt = Runtime::new()?;
-    rt.block_on(execute_command(matches, config))
+    execute_command(matches, config).await
 }
