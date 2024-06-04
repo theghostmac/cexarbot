@@ -3,6 +3,7 @@ use std::env;
 
 pub struct Config {
     pub binance_api_key: String,
+    pub binance_secret_key: String,
     pub openai_api_key: String,
 }
 
@@ -12,6 +13,7 @@ impl Config {
 
         Ok(Config {
             binance_api_key: env::var("BINANCE_API_KEY")?,
+            binance_secret_key: env::var("BINANCE_SECRET_KEY")?,
             openai_api_key: env::var("OPENAI_API_KEY")?,
         })
     }

@@ -1,11 +1,12 @@
 mod cexar_ai;
 mod config;
 mod binance_client;
-mod trade;
 
-use cexar_ai::ai_client::get_openai_prediction;
 use clap::{Arg, Command};
+use tokio::runtime::Runtime;
 use config::secrets::Config;
+use crate::binance_client::binance_client::BinanceClient;
+use crate::cexar_ai::ai_client::{get_openai_prediction, get_account_information_response};
 
 fn cli() -> Command {
     Command::new("cexarbot")
@@ -35,6 +36,10 @@ fn cli() -> Command {
                 ),
         )
         .subcommand(
+            Command::new("account")
+                .about("Displays personal account information.")
+        )
+        .subcommand(
             Command::new("backtest")
                 .about("Back-testing a trading strategy.")
                 .arg(
@@ -56,30 +61,9 @@ fn cli() -> Command {
         )
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = Config::load().unwrap();
-
-    println!(
-        r#"
-
- ▄████▄  ▓█████ ▒██   ██▒ ▄▄▄       ██▀███   ▄▄▄▄    ▒█████  ▄▄▄█████▓
-▒██▀ ▀█  ▓█   ▀ ▒▒ █ █ ▒░▒████▄    ▓██ ▒ ██▒▓█████▄ ▒██▒  ██▒▓  ██▒ ▓▒
-▒▓█    ▄ ▒███   ░░  █   ░▒██  ▀█▄  ▓██ ░▄█ ▒▒██▒ ▄██▒██░  ██▒▒ ▓██░ ▒░
-▒▓▓▄ ▄██▒▒▓█  ▄  ░ █ █ ▒ ░██▄▄▄▄██ ▒██▀▀█▄  ▒██░█▀  ▒██   ██░░ ▓██▓ ░
-▒ ▓███▀ ░░▒████▒▒██▒ ▒██▒ ▓█   ▓██▒░██▓ ▒██▒░▓█  ▀█▓░ ████▓▒░  ▒██▒ ░
-░ ░▒ ▒  ░░░ ▒░ ░▒▒ ░ ░▓ ░ ▒▒   ▓▒█░░ ▒▓ ░▒▓░░▒▓███▀▒░ ▒░▒░▒░   ▒ ░░
-  ░  ▒    ░ ░  ░░░   ░▒ ░  ▒   ▒▒ ░  ░▒ ░ ▒░▒░▒   ░   ░ ▒ ▒░     ░
-░           ░    ░    ░    ░   ▒     ░░   ░  ░    ░ ░ ░ ░ ▒    ░
-░ ░         ░  ░ ░    ░        ░  ░   ░      ░          ░ ░
-░                                                 ░
-
-        "#
-    );
-
+async fn execute_command(matches: clap::ArgMatches, config: Config) -> Result<(), Box<dyn std::error::Error>> {
     let openai_api_key = config.openai_api_key;
-
-    let matches = cli().get_matches();
+    let binance_client = BinanceClient::new(Some(config.binance_api_key.clone()), Some(config.binance_secret_key.clone()));
 
     match matches.subcommand() {
         Some(("trade", sub_matches)) => {
@@ -102,8 +86,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Back-testing {} strategy on {}", strategy, symbol);
             // TODO: call the function to execute a back-test on the trading strategy.
         }
+        Some(("account", _sub_matches)) => {
+            let account_info = binance_client.get_account_information()?;
+            let response = get_account_information_response(account_info, openai_api_key).await?;
+            println!("{}", response);
+        }
         _ => unreachable!("The CLI should require a subcommand, this should never happen"),
     }
 
     Ok(())
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = Config::load().unwrap();
+
+    println!(
+        r#"
+
+ ▄████▄  ▓█████ ▒██   ██▒ ▄▄▄       ██▀███   ▄▄▄▄    ▒█████  ▄▄▄█████▓
+▒██▀ ▀█  ▓█   ▀ ▒▒ █ █ ▒░▒████▄    ▓██ ▒ ██▒▓█████▄ ▒██▒  ██▒▓  ██▒ ▓▒
+▒▓█    ▄ ▒███   ░░  █   ░▒██  ▀█▄  ▓██ ░▄█ ▒▒██▒ ▄██▒██░  ██▒▒ ▓██░ ▒░
+▒▓▓▄ ▄██▒▒▓█  ▄  ░ █ █ ▒ ░██▄▄▄▄██ ▒██▀▀█▄  ▒██░█▀  ▒██   ██░░ ▓██▓ ░
+▒ ▓███▀ ░░▒████▒▒██▒ ▒██▒ ▓█   ▓██▒░██▓ ▒██▒░▓█  ▀█▓░ ████▓▒░  ▒██▒ ░
+░ ░▒ ▒  ░░░ ▒░ ░▒▒ ░ ░▓ ░ ▒▒   ▓▒█░░ ▒▓ ░▒▓░░▒▓███▀▒░ ▒░▒░▒░   ▒ ░░
+  ░  ▒    ░ ░  ░░░   ░▒ ░  ▒   ▒▒ ░  ░▒ ░ ▒░▒░▒   ░   ░ ▒ ▒░     ░
+░           ░    ░    ░    ░   ▒     ░░   ░  ░    ░ ░ ░ ░ ▒    ░
+░ ░         ░  ░ ░    ░        ░  ░   ░      ░          ░ ░
+░                                                 ░
+
+        "#
+    );
+
+    let matches = cli().get_matches();
+
+    let rt = Runtime::new()?;
+    rt.block_on(execute_command(matches, config))
 }
