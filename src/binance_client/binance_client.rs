@@ -1,8 +1,8 @@
-use binance::api::*;
-use binance::account::*;
 use binance::account::TimeInForce::GTC;
-use binance::market::*;
+use binance::account::*;
+use binance::api::*;
 use binance::errors::Error;
+use binance::market::*;
 use binance::model::*;
 
 pub struct BinanceClient {
@@ -27,30 +27,42 @@ impl BinanceClient {
         Ok(price)
     }
 
-    pub fn place_order(&self, symbol: &str, quantity: f64, price: f64, stop_price: Option<f64>, side: &str, order_type: &str) -> Result<Transaction, Error> {
+    pub fn place_order(
+        &self,
+        symbol: &str,
+        quantity: f64,
+        price: f64,
+        stop_price: Option<f64>,
+        side: &str,
+        order_type: &str,
+    ) -> Result<Transaction, Error> {
         let order_side = match side {
             "BUY" => OrderSide::Buy,
             "SELL" => OrderSide::Sell,
-            _ => return Err(Error::from_kind(binance::errors::ErrorKind::Msg("Invalid order side".to_string()))),
+            _ => {
+                return Err(Error::from_kind(binance::errors::ErrorKind::Msg(
+                    "Invalid order side".to_string(),
+                )))
+            }
         };
 
         let order_type = match order_type {
             "LIMIT" => OrderType::Limit,
             "MARKET" => OrderType::Market,
             "STOP_LIMIT" => OrderType::StopLossLimit,
-            _ => return Err(Error::from_kind(binance::errors::ErrorKind::Msg("Invalid order type".to_string()))),
+            _ => {
+                return Err(Error::from_kind(binance::errors::ErrorKind::Msg(
+                    "Invalid order type".to_string(),
+                )))
+            }
         };
 
-        let new_order = self.account.custom_order(
-            symbol,
-            quantity,
-            price,
-            stop_price,
-            order_side,
-            order_type,
-            GTC,
-            None,
-        ).unwrap();
+        let new_order = self
+            .account
+            .custom_order(
+                symbol, quantity, price, stop_price, order_side, order_type, GTC, None,
+            )
+            .unwrap();
 
         Ok(new_order)
     }
@@ -67,12 +79,26 @@ impl BinanceClient {
         self.account.market_sell(symbol, quantity)
     }
 
-    pub fn stop_limit_buy_order(&self, symbol: &str, quantity: f64, price: f64, stop_price: f64) -> Result<Transaction, Error> {
-        self.account.stop_limit_buy_order(symbol, quantity, price, stop_price, GTC)
+    pub fn stop_limit_buy_order(
+        &self,
+        symbol: &str,
+        quantity: f64,
+        price: f64,
+        stop_price: f64,
+    ) -> Result<Transaction, Error> {
+        self.account
+            .stop_limit_buy_order(symbol, quantity, price, stop_price, GTC)
     }
 
-    pub fn stop_limit_sell_order(&self, symbol: &str, quantity: f64, price: f64, stop_price: f64) -> Result<Transaction, Error> {
-        self.account.stop_limit_sell_order(symbol, quantity, price, stop_price, GTC)
+    pub fn stop_limit_sell_order(
+        &self,
+        symbol: &str,
+        quantity: f64,
+        price: f64,
+        stop_price: f64,
+    ) -> Result<Transaction, Error> {
+        self.account
+            .stop_limit_sell_order(symbol, quantity, price, stop_price, GTC)
     }
 
     pub fn get_order_status(&self, symbol: &str, order_id: u64) -> Result<Order, Error> {

@@ -1,11 +1,11 @@
+mod binance_client;
 mod cexar_ai;
 mod config;
-mod binance_client;
 
-use clap::{Arg, Command};
-use config::secrets::Config;
 use crate::binance_client::binance_client::BinanceClient;
 use crate::cexar_ai::ai_client::{get_account_information_response, get_openai_prediction};
+use clap::{Arg, Command};
+use config::secrets::Config;
 
 fn cli() -> Command {
     Command::new("cexarbot")
@@ -34,10 +34,7 @@ fn cli() -> Command {
                         .required(true),
                 ),
         )
-        .subcommand(
-            Command::new("account")
-                .about("Displays personal account information.")
-        )
+        .subcommand(Command::new("account").about("Displays personal account information."))
         .subcommand(
             Command::new("backtest")
                 .about("Back-testing a trading strategy.")
@@ -60,9 +57,15 @@ fn cli() -> Command {
         )
 }
 
-async fn execute_command(matches: clap::ArgMatches, config: Config) -> Result<(), Box<dyn std::error::Error>> {
+async fn execute_command(
+    matches: clap::ArgMatches,
+    config: Config,
+) -> Result<(), Box<dyn std::error::Error>> {
     let openai_api_key = config.openai_api_key;
-    let binance_client = BinanceClient::new(Some(config.binance_api_key.clone()), Some(config.binance_secret_key.clone()));
+    let binance_client = BinanceClient::new(
+        Some(config.binance_api_key.clone()),
+        Some(config.binance_secret_key.clone()),
+    );
 
     match matches.subcommand() {
         Some(("trade", sub_matches)) => {
